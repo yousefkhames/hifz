@@ -40,9 +40,11 @@ phone, without an account.
 
 ## Screenshots
 
-| Today | Add | Progress |
-| --- | --- | --- |
-| ![Today view](screenshots/today.png) | ![Add a memorization](screenshots/add.png) | ![Progress](screenshots/progress.png) |
+| Today | Add | Progress | Arabic (RTL) |
+| --- | --- | --- | --- |
+| ![Today view](screenshots/today.png) | ![Add a memorization](screenshots/add.png) | ![Progress](screenshots/progress.png) | ![Arabic RTL view](screenshots/arabic.png) |
+
+Screenshots are from the live site with clean sample data.
 
 ## Data accuracy
 
