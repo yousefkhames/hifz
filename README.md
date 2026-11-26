@@ -35,6 +35,13 @@ phone, without an account.
   today's reviews.
 - **Arabic & English** - full UI translation with proper RTL layout, Amiri for
   surah names.
+- **Listen** - every portion has a Listen button that plays the ayahs of your
+  range one after another, so you can check how a verse is pronounced. Choose
+  from six reciters in Settings (Alafasy, Al-Husary, Al-Minshawi, Abdul Basit,
+  As-Sudais, Ash-Shuraim). Audio streams from [everyayah.com](https://everyayah.com).
+- **Works offline and installs** - the app, its fonts and icons are cached after
+  the first visit and the app can be added to the home screen. Listening needs
+  a connection.
 - **Private by design** - everything lives in `localStorage`. Export/import
   JSON to move between browsers.
 
@@ -44,7 +51,7 @@ phone, without an account.
 | --- | --- | --- | --- |
 | ![Today view](screenshots/today.png) | ![Add a memorization](screenshots/add.png) | ![Progress](screenshots/progress.png) | ![Arabic RTL view](screenshots/arabic.png) |
 
-Screenshots are from the live site with clean sample data.
+Screenshots are from the app with clean sample data.
 
 ## Data accuracy
 
@@ -61,12 +68,13 @@ Screenshots are from the live site with clean sample data.
 ## Tech
 
 - Vanilla HTML/CSS/JS. No frameworks, no build step, no dependencies at
-  runtime. Fonts from Google Fonts with system fallbacks.
+  runtime. Fonts (Amiri, IBM Plex Sans Arabic, SIL OFL) are bundled in `fonts/`.
+  A service worker caches the app for offline use.
 - `scheduler.js` is pure, DOM-free logic shared verbatim between the browser
   and the test suite.
 - Tests: `npm test` runs `tests/test.js` (425+ assertions over the scheduler
   and the bundled mushaf data, zero dependencies) and `tests/dom.test.js` (a
-  jsdom click-through of the real UI: add, review, filter, delete, import,
+  jsdom click-through of the real UI: add, review, listen, search spellings, filter, delete, import,
   language switch). Only dev dependency is jsdom, for the DOM test.
 - Hosted as a static site on GitHub Pages.
 
@@ -76,8 +84,14 @@ Screenshots are from the live site with clean sample data.
 - **Your data is per browser** (localStorage). Clearing site data erases it;
   use Settings → Export to back up or move devices.
 - The schedule is a heuristic ladder, not a full SM-2 implementation.
-- Offline works after first load only if your browser keeps the files cached;
-  fonts degrade gracefully without a connection.
+- Offline works after the first visit. **Recitation audio is not cached and
+  not bundled**: it streams from everyayah.com, so Listen needs a connection and
+  everyayah.com can see which ayahs you play (nothing else about you). The
+  recitation is a third party recording, not made by this project.
+- Listen plays the ayahs you logged; it does not show the Quran text. Use a
+  mushaf next to it.
+- The surah picker accepts common Latin spellings (Yasin, Baqarah, Kahf) but
+  the names follow the Tanzil transliteration (for example, Yaseen).
 
 ## License
 

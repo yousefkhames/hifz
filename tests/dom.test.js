@@ -27,6 +27,13 @@ const { document } = window;
 window.localStorage.clear();
 window.confirm = () => true;
 
+// audio stub: records urls, lets the test end each ayah by hand
+const played = [];
+window.Audio = function () {
+  this.pause = function () {}; this.removeAttribute = function () {};
+  this.play = function () { played.push(this.src); return Promise.resolve(); };
+};
+
 // load app scripts concatenated, mirroring how classic <script> tags share
 // one global lexical scope in the browser
 const bundle = ["data.js", "scheduler.js", "app.js"]
@@ -140,7 +147,37 @@ ok(stored.entries[1].surah === 36, "dom: Ya-Sin is surah 36");
 click($("#langToggle"));
 ok(document.documentElement.dir === "ltr", "dom: back to LTR");
 
+// ---- listen: plays every ayah of the range in order from everyayah.com ----
+nav("#/library");
+const lbtn = $(".lib-item .listen-btn");
+ok(lbtn !== null, "dom: library item has a Listen button");
+click(lbtn);
+ok(played[0] === "https://everyayah.com/data/Alafasy_128kbps/" + ("00" + stored.entries[0].surah).slice(-3) + ("00" + stored.entries[0].from).slice(-3) + ".mp3", "dom: first ayah url is correct");
+ok($(".listen-status").textContent.includes("1"), "dom: listen status shows ayah progress");
+ok(lbtn.classList.contains("playing"), "dom: button shows playing state");
+click(lbtn);
+ok(!lbtn.classList.contains("playing"), "dom: second tap stops");
+
+// ---- surah picker tolerates common spellings ----
+nav("#/add");
+{
+  const inp = $("#surahInput");
+  ["yasin", "Ya-Sin", "baqarah", "kahf", "ikhlas", "rahman"].forEach((q, i) => {
+    inp.value = q; inp.dispatchEvent(new window.Event("input", { bubbles: true }));
+    const n = $$(".surah-option").map((o) => o.getAttribute("data-n"));
+    const want = [36, 36, 2, 18, 112, 55][i];
+    ok(n.includes(String(want)), "dom: picker finds surah " + want + " for '" + q + "'");
+  });
+}
+
+// ---- reciter setting ----
+nav("#/settings");
+$("#reciterSel").value = "Husary_128kbps";
+$("#reciterSel").dispatchEvent(new window.Event("change", { bubbles: true }));
+ok(store().settings.reciter === "Husary_128kbps", "dom: reciter saved");
+
 // ---- delete ----
+nav("#/library");
 nav("#/library");
 click($(".lib-item .del-btn"));
 stored = store();

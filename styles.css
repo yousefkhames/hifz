@@ -429,3 +429,12 @@ nav.bottom .bar {
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
+
+/* listen (recitation) */
+.listen-wrap { display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+.listen-btn { display: inline-flex; align-items: center; gap: 7px; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--gold-dim); background: rgba(212, 175, 55, 0.08); color: var(--gold); font-family: var(--font-ui); font-size: 0.8rem; font-weight: 600; cursor: pointer; min-height: 36px; }
+.listen-btn:hover { background: rgba(212, 175, 55, 0.16); }
+.listen-btn.playing { background: var(--gold); color: #1a1405; }
+.listen-status { color: var(--ink-faint); font-size: 0.72rem; }
+.due-card .listen-wrap { margin: 12px 0 0; }
+#reciterSel { max-width: 190px; background: rgba(7, 18, 14, .6); border: 1px solid var(--card-line); border-radius: 10px; color: var(--ink); padding: 8px 10px; font-family: var(--font-ui); font-size: 0.82rem; }

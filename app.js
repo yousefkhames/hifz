@@ -47,7 +47,9 @@
       imported_toast: "Data imported", import_bad: "That file is not a valid Hifz export",
       cleared_toast: "All data erased",
       about_d: "Hifz is a private, offline-first tracker. No account, no server, no Quran text - only your ranges and schedule.",
-      days_short: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"],
+      listen: "Listen", stop: "Stop", listen_ayah: "Ayah {n} of {m}", audio_err: "Could not load the recitation. Check your connection.",
+      set_reciter: "Reciter", set_reciter_d: "Used by the Listen buttons. Audio streams from everyayah.com, so it needs a connection.",
+      days_short: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
       months_short: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     },
     ar: {
@@ -89,6 +91,8 @@
       imported_toast: "تم الاستيراد", import_bad: "هذا الملف ليس تصديرًا صالحًا من حِفْظ",
       cleared_toast: "تم مسح كل البيانات",
       about_d: "حِفْظ متتبّع خاص يعمل دون اتصال. لا حساب ولا خادم ولا نص قرآني - فقط مقاطعك وجدولك.",
+      listen: "استمع", stop: "إيقاف", listen_ayah: "الآية {n} من {m}", audio_err: "تعذّر تحميل التلاوة. تأكد من الاتصال بالإنترنت.",
+      set_reciter: "القارئ", set_reciter_d: "تستخدمه أزرار الاستماع. الصوت يُبثّ من everyayah.com لذلك يحتاج اتصالًا بالإنترنت.",
       days_short: ["أحد", "اثنين", "ثلاثاء", "أربعاء", "خميس", "جمعة", "سبت"],
       months_short: ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"]
     }
@@ -111,6 +115,61 @@
     return { entries: [], reviewDays: [], settings: { lang: "en", goal: 5 } };
   }
   function save() { localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
+
+  var RECITERS = [
+    { id: "Alafasy_128kbps", en: "Mishary Alafasy", ar: "مشاري العفاسي" },
+    { id: "Husary_128kbps", en: "Mahmoud Al-Husary", ar: "محمود خليل الحصري" },
+    { id: "Minshawy_Murattal_128kbps", en: "Muhammad Al-Minshawi", ar: "محمد صديق المنشاوي" },
+    { id: "Abdul_Basit_Murattal_192kbps", en: "Abdul Basit", ar: "عبد الباسط عبد الصمد" },
+    { id: "Abdurrahmaan_As-Sudais_192kbps", en: "As-Sudais", ar: "عبد الرحمن السديس" },
+    { id: "Saood_ash-Shuraym_128kbps", en: "Ash-Shuraim", ar: "سعود الشريم" }
+  ];
+  function pad3(n) { return ("00" + n).slice(-3); }
+  function ayahUrl(reciter, surah, ayah) {
+    return "https://everyayah.com/data/" + reciter + "/" + pad3(surah) + pad3(ayah) + ".mp3";
+  }
+  var player = { audio: null, id: null, cur: 0 };
+  function stopPlayer() {
+    if (player.audio) { player.audio.onended = null; player.audio.onerror = null; player.audio.pause(); player.audio.removeAttribute("src"); }
+    player.id = null;
+    document.querySelectorAll(".listen-btn.playing").forEach(function (b) {
+      b.classList.remove("playing");
+      b.querySelector("span").textContent = t("listen");
+    });
+    document.querySelectorAll(".listen-status").forEach(function (s) { s.textContent = ""; });
+  }
+  function togglePlay(id, btn) {
+    var wasPlaying = player.id === id;
+    stopPlayer();
+    if (wasPlaying) return;
+    var e = state.entries.find(function (x) { return x.id === id; });
+    if (!e) return;
+    var reciter = state.settings.reciter || RECITERS[0].id;
+    if (!player.audio) player.audio = new Audio();
+    var audio = player.audio, total = e.to - e.from + 1, ayah = e.from;
+    var status = btn.parentNode.querySelector(".listen-status");
+    player.id = id;
+    btn.classList.add("playing");
+    btn.querySelector("span").textContent = t("stop");
+    function playAyah() {
+      player.cur = ayah;
+      if (status) status.textContent = t("listen_ayah", { n: ayah - e.from + 1, m: total });
+      audio.src = ayahUrl(reciter, e.surah, ayah);
+      var pr = audio.play();
+      if (pr && pr.catch) pr.catch(function () { if (player.id === id) { stopPlayer(); toast(t("audio_err")); } });
+    }
+    audio.onended = function () {
+      if (player.id !== id) return;
+      if (ayah < e.to) { ayah++; playAyah(); } else stopPlayer();
+    };
+    audio.onerror = function () { if (player.id === id) { stopPlayer(); toast(t("audio_err")); } };
+    playAyah();
+  }
+  function listenBtn(e) {
+    return '<div class="listen-wrap"><button class="listen-btn" type="button" data-id="' + esc(e.id) + '">' +
+      '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span>' + esc(t("listen")) + "</span></button>" +
+      '<small class="listen-status" aria-live="polite"></small></div>';
+  }
 
   function lang() { return state.settings.lang === "ar" ? "ar" : "en"; }
   function t(key, vars) {
@@ -181,6 +240,7 @@
       '<div class="due-meta">' + dueChips(e, today) + "</div>" +
       stageMeter(e.stage) +
       "</div></div>" +
+      listenBtn(e) +
       '<div class="quality-row">' +
       '<button class="qbtn q-again" data-q="again" type="button">' + esc(t("q_again")) + "<small>" + esc(t("q_again_hint")) + "</small></button>" +
       '<button class="qbtn q-hard" data-q="hard" type="button">' + esc(t("q_hard")) + "<small>" + esc(t("q_hard_hint")) + "</small></button>" +
@@ -307,6 +367,7 @@
         '<div class="info"><div class="t">' + esc(surahLabel(e.surah)) + ' <span style="font-family:var(--font-ui);font-size:0.75rem;color:var(--ink-faint)">' + e.from + "–" + e.to + "</span></div>" +
         '<div class="m">' + esc(t("lib_reps", { r: e.reps })) + " · " + esc(t("lib_lapses", { l: e.lapses })) + ' · <span class="chip' + dueCls + '" style="padding:1px 8px">' + esc(t("lib_next", { d: e.nextDue })) + "</span></div>" +
         stageMeter(e.stage) +
+        listenBtn(e) +
         "</div>" +
         '<button class="icon-btn del-btn" type="button" aria-label="delete" data-id="' + esc(e.id) + '">✕</button>' +
         "</div>";
@@ -380,6 +441,10 @@
       '<div class="set-row"><div><div class="t">' + esc(t("set_goal")) + '</div><div class="d">' + esc(t("set_goal_d")) + '</div></div>' +
       '<input type="number" id="goalInput" min="1" max="50" value="' + goal + '" style="width:76px;background:rgba(7,18,14,.6);border:1px solid var(--card-line);border-radius:10px;color:var(--ink);padding:8px 10px;font-family:var(--font-ui)">' +
       "</div>" +
+      '<div class="set-row"><div><div class="t">' + esc(t("set_reciter")) + '</div><div class="d">' + esc(t("set_reciter_d")) + '</div></div>' +
+      '<select id="reciterSel" aria-label="' + esc(t("set_reciter")) + '">' + RECITERS.map(function (r) {
+        return '<option value="' + r.id + '"' + ((state.settings.reciter || RECITERS[0].id) === r.id ? " selected" : "") + ">" + esc(lang() === "ar" ? r.ar : r.en) + "</option>";
+      }).join("") + "</select></div>" +
       '<div class="set-row"><div><div class="t">' + esc(t("set_export")) + '</div><div class="d">' + esc(t("set_export_d")) + '</div></div>' +
       '<button class="btn btn-ghost" id="exportBtn" type="button">JSON</button></div>' +
       '<div class="set-row"><div><div class="t">' + esc(t("set_import")) + '</div><div class="d">' + esc(t("set_import_d")) + '</div></div>' +
@@ -432,7 +497,13 @@
     var toHint = document.getElementById("toHint");
     var conf = "medium";
 
-    function norm(s) { return s.toLowerCase().replace(/[ً-ْٰـأإآٱ]/g, function (c) { return c === "ـ" ? "" : "ا"; }).trim(); }
+    function norm(s) {
+      return String(s).toLowerCase()
+        .replace(/[ً-ْٰـأإآٱ]/g, function (c) { return c === "ـ" ? "" : "ا"; })
+        .replace(/[\s\-_'’`.]+/g, "")
+        .replace(/ee|ii/g, "i").replace(/aa/g, "a").replace(/oo|ou|uu/g, "u").replace(/h/g, "")
+        .trim();
+    }
 
     function renderOptions(q) {
       var nq = norm(q);
@@ -526,6 +597,10 @@
   /* ---------------- settings wiring ---------------- */
   function wireSettings() {
     document.getElementById("langSwap").addEventListener("click", swapLang);
+    document.getElementById("reciterSel").addEventListener("change", function (ev) {
+      state.settings.reciter = ev.target.value;
+      save();
+    });
     document.getElementById("goalInput").addEventListener("change", function (ev) {
       var v = Math.max(1, Math.min(50, Number(ev.target.value) || 5));
       state.settings.goal = v;
@@ -592,6 +667,7 @@
   }
 
   function render() {
+    stopPlayer();
     var r = route();
     var view = document.getElementById("view");
     document.querySelectorAll(".nav-btn").forEach(function (b) {
@@ -612,6 +688,8 @@
   });
 
   document.getElementById("view").addEventListener("click", function (ev) {
+    var lb = ev.target.closest(".listen-btn");
+    if (lb) { togglePlay(lb.getAttribute("data-id"), lb); return; }
     var q = ev.target.closest(".qbtn");
     if (q) {
       var card = q.closest(".due-card");
