@@ -9,6 +9,15 @@ you forget returns to the start of the ladder.
 
 **Live demo:** https://yousefkhames.github.io/hifz/
 
+## Screenshots
+
+Captured from the live site (https://yousefkhames.github.io/hifz/).
+
+<p>
+  <img src="docs/screenshots/live-desktop.png" alt="hifz desktop view" width="640">
+  <img src="docs/screenshots/live-mobile.png" alt="hifz mobile view" width="200">
+</p>
+
 ## Why
 
 Memorization without revision evaporates. Most trackers are either plain
