@@ -1,0 +1,14 @@
+{
+  "name": "Hifz - Quran Memorization Tracker",
+  "short_name": "Hifz",
+  "description": "Track what you memorized from the Quran and get a spaced-revision schedule.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0b1f18",
+  "theme_color": "#0b1f18",
+  "dir": "auto",
+  "lang": "en",
+  "icons": [
+    { "src": "assets/logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

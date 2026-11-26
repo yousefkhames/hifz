@@ -1,0 +1,16 @@
+{
+  "name": "hifz",
+  "version": "1.0.0",
+  "description": "Quran memorization tracker with spaced revision scheduling",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "node tests/test.js && node tests/dom.test.js"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "jsdom": "^31.0.1"
+  },
+  "author": "Yousef Khames"
+}
